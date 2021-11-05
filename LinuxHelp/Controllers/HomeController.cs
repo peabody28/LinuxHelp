@@ -1,11 +1,9 @@
 ﻿using LinuxHelp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace LinuxHelp.Controllers
 {
@@ -31,8 +29,36 @@ namespace LinuxHelp.Controllers
         {
             if (ModelState.IsValid)
             {
-                // get info
-                return Redirect("https://tldr.ostera.io/"+info.Command);
+                string html = "";
+                using (WebClient client = new WebClient())
+                    html = client.DownloadString("http://man.he.net/?topic="+info.Command+"&section=all");
+
+                int ind = html.IndexOf("No matches for");
+                if (ind != -1)
+                {
+                    ViewBag.not_found = true;
+                    return View();
+                }
+                    
+
+                // парсинг
+                int start = html.IndexOf("<PRE>");
+                int end = html.IndexOf("</PRE>", start);
+
+                string term = html.Substring(start, end-start);
+
+                // delete links
+                Regex regex = new Regex(@"<A(.+)/A>");
+                MatchCollection matches = regex.Matches(term);
+                if (matches.Count > 0)
+                {
+                    foreach (Match match in matches)
+                        term = term.Replace(match.Value, "");
+                }
+                term = term.Replace("\n<STRONG></STRONG>\n\n", "");
+                ViewBag.term = term;
+                ViewBag.url = Request.Host.Value;
+                return View("Info", info);
             }
             else
                 return View();
