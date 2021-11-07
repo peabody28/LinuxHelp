@@ -26,21 +26,28 @@ namespace LinuxHelp.Controllers
         [HttpPost]
         public string Index(SearchCommand comm)
         {
-            
+            if(comm.Command == null)
+                return "<span style='color:red; font-weight: bold;'>заполните поля</span>";
             string html = "";
             using (WebClient client = new WebClient())
                 html = client.DownloadString("http://man.he.net/?topic="+comm.Command+"&section=all");
 
             int ind = html.IndexOf("No matches for");
             if (ind != -1)
-                return "not found";
-                    
+                return "<span style='color:red; font-weight: bold;'>такой команды нет</span>";
+
 
             // парсинг
+            
+            
             int start = html.IndexOf("<PRE>");
+            if(start == -1)
+                return "<span style='color:red; font-weight: bold;'>ошибка, возможно неверные данные</span>";
             int end = html.IndexOf("</PRE>", start);
+            string term = html.Substring(start, end - start);
+            
 
-            string term = html.Substring(start, end-start);
+            
 
             // delete links
             Regex regex = new Regex(@"<A(.+)/A>");
