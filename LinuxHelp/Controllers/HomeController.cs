@@ -19,49 +19,39 @@ namespace LinuxHelp.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            //ViewBag
             return View();
         }
 
         // Обработка отправки формы (POST-запрос)
         [HttpPost]
-        public IActionResult Index(SearchCommand info)
+        public string Index(SearchCommand comm)
         {
-            if (ModelState.IsValid)
-            {
-                string html = "";
-                using (WebClient client = new WebClient())
-                    html = client.DownloadString("http://man.he.net/?topic="+info.Command+"&section=all");
+            
+            string html = "";
+            using (WebClient client = new WebClient())
+                html = client.DownloadString("http://man.he.net/?topic="+comm.Command+"&section=all");
 
-                int ind = html.IndexOf("No matches for");
-                if (ind != -1)
-                {
-                    ViewBag.not_found = true;
-                    return View();
-                }
+            int ind = html.IndexOf("No matches for");
+            if (ind != -1)
+                return "not found";
                     
 
-                // парсинг
-                int start = html.IndexOf("<PRE>");
-                int end = html.IndexOf("</PRE>", start);
+            // парсинг
+            int start = html.IndexOf("<PRE>");
+            int end = html.IndexOf("</PRE>", start);
 
-                string term = html.Substring(start, end-start);
+            string term = html.Substring(start, end-start);
 
-                // delete links
-                Regex regex = new Regex(@"<A(.+)/A>");
-                MatchCollection matches = regex.Matches(term);
-                if (matches.Count > 0)
-                {
-                    foreach (Match match in matches)
-                        term = term.Replace(match.Value, "");
-                }
-                term = term.Replace("\n<STRONG></STRONG>\n\n", "");
-                ViewBag.term = term;
-                ViewBag.url = Request.Host.Value;
-                return View("Info", info);
+            // delete links
+            Regex regex = new Regex(@"<A(.+)/A>");
+            MatchCollection matches = regex.Matches(term);
+            if (matches.Count > 0)
+            {
+                foreach (Match match in matches)
+                    term = term.Replace(match.Value, "");
             }
-            else
-                return View();
+            term = term.Replace("\n<STRONG></STRONG>\n\n", "");
+            return term ;
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

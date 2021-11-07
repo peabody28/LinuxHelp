@@ -11,33 +11,42 @@
     <title>Form</title>
     <link rel="stylesheet" type="text/css" href="~/css/site.css" />
     <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
 </head>
 <body style="font-size: 25px;">
-    <div class="panel-success" style="margin-top:250px;">
+    <div class="panel-success" style="margin-top:150px;">
         <div class="panel-heading text-center">
             <h1>Введите команду</h1>
         </div>
         <div class="m-0 p-0 container-fluid">
-            @using (Html.BeginForm())
-            {
-                <div class="form-group d-flex justify-content-center row">
-                    @Html.TextBoxFor(x => x.Command, new { @class = "col-4" })
+
+            <form id="send_command" method="POST">
+                <div class="d-flex justify-content-center row">
+                    <input type="text" name="Command" style="font-size: 20px;" class="col-4" />
                     <input type="submit" value="Search" style="font-size: 20px;" class="ml-1 col-1 btn btn-success" />
                 </div>
-                <div style="color: red; font-weight:bold;" class="d-flex justify-content-center row">
-                    @if (ViewBag.not_found == true)
-                    {
-                        <span>not found</span>
-                    }
-                    else
-                    {
-                        @Html.ValidationSummary()
-                    }
+                
+            </form>
 
-
-                </div>
-            }
         </div>
+        <div class="d-flex justify-content-center m-0 p-0 mt-5" id="result"></div>
     </div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $('#send_command').submit(function () {
+                $.ajax({
+                    type: 'POST',
+                    url: '/',
+                    data: $(this).serialize(),
+                    success: function (result) {
+                        $('#result').html(result);
+                    }
+                });
+                return false;
+            });
+
+        });
+    </script>
 </body>
 </html>
